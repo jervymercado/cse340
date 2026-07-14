@@ -48,3 +48,49 @@ VALUES
 (3, 'Neighborhood Cleanup', 'Organizing a large-scale litter and cleanup event.', 'Naperville, IL', '2026-07-17');
 
 SELECT * FROM project;
+
+
+CREATE TABLE category (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE project_category (
+    project_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    PRIMARY KEY (project_id, category_id),
+    FOREIGN KEY (project_id) REFERENCES project (project_id),
+    FOREIGN KEY (category_id) REFERENCES category (category_id)
+);
+
+INSERT INTO category (name)
+VALUES
+('Construction'),
+('Food Security'),
+('Education'),
+('Environment'),
+('Community Support');
+
+SELECT * FROM category;
+
+INSERT INTO project_category (project_id, category_id)
+VALUES
+(1, 1),   -- Community Garden Build -> Construction
+(2, 1),   -- Playground Renovation -> Construction
+(3, 1),   -- Roof Repair for Elderly Housing -> Construction
+(4, 1),   -- Wheelchair Ramp Installation -> Construction
+(5, 1),   -- Storm Shelter Construction -> Construction
+(6, 4),   -- Urban Farm Expansion -> Environment
+(6, 2),   -- Urban Farm Expansion -> Food Security (example of 2 categories on one project)
+(7, 4),   -- Composting Workshop Series -> Environment
+(8, 3),   -- School Garden Program -> Education
+(8, 4),   -- School Garden Program -> Environment
+(9, 2),   -- Farmers Market Support -> Food Security
+(10, 3),  -- Seed Library Launch -> Education
+(11, 2),  -- Food Pantry Restock Drive -> Food Security
+(12, 5),  -- Winter Coat Drive -> Community Support
+(13, 3),  -- Volunteer Training Day -> Education
+(14, 5),  -- Senior Companion Program -> Community Support
+(15, 4);  -- Neighborhood Cleanup -> Environment
+
+SELECT * FROM project_category;
