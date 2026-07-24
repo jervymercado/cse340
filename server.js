@@ -2,40 +2,51 @@ import 'dotenv/config';
 import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import session from 'express-session';
 import { testConnection } from './src/models/db.js';
 import router from './src/routes.js';
-
+import flash from './src/middleware/flash.js';
 
 const NODE_ENV = process.env.NODE_ENV?.toLowerCase() || 'production';
 const PORT = process.env.PORT || 3000;
+const SESSION_SECRET = process.env.SESSION_SECRET;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-/**
- * Configure Express middleware
- */
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
+// Session management
+app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { maxAge: 60 * 60 * 1000 }
+}));
+
+// Flash messages
+app.use(flash);
+
+// Parse POST form data
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 // Log all incoming requests
 app.use((req, res, next) => {
-    if (NODE_ENV === 'development') {
-        console.log(`${req.method} ${req.url}`);
-    }
+    if (NODE_ENV === 'development') console.log(`${req.method} ${req.url}`);
     next();
 });
 
-// Make NODE_ENV available to all templates
+// Make NODE_ENV available to templates
 app.use((req, res, next) => {
     res.locals.NODE_ENV = NODE_ENV;
     next();
 });
 
-// Use the router for all defined routes
 app.use(router);
 
 // Catch-all route for 404 errors
@@ -53,13 +64,11 @@ app.use((err, req, res, next) => {
     const status = err.status || 500;
     const template = status === 404 ? '404' : '500';
 
-    const context = {
+    res.status(status).render(`errors/${template}`, {
         title: status === 404 ? 'Page Not Found' : 'Server Error',
         error: err.message,
         stack: err.stack
-    };
-
-    res.status(status).render(`errors/${template}`, context);
+    });
 });
 
 app.listen(PORT, async () => {
